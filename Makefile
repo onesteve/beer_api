@@ -16,16 +16,16 @@ help:
 	@grep -E '(^[a-zA-Z_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-10s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
 
 build: ## Lance le build des conteneur docker
-	docker-compose -f docker-compose.yml build
+	docker compose -f docker-compose.yml build --no-cache
 
 start: ## Demmare les conteneurs docker
-	docker-compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml up -d
 
 stop: ## Arrete les conteneurs docker
-	docker-compose -f docker-compose.yml stop
+	docker compose -f docker-compose.yml stop
 
 destroy: ## Arretes les conteneurs en detruisant les conteneurs, volumes et network associee.
-	docker-compose -f docker-compose.yml  down --volumes
+	docker compose -f docker-compose.yml  down --volumes
 
 composer.lock: composer.json ## Composer update
 	docker run --rm -v ${PWD}:/app composer:latest composer update --with-dependencies --no-interaction --ignore-platform-reqs
@@ -40,7 +40,7 @@ dump-autoload: ## Composer dump-autoload
 	docker run --rm -v ${PWD}:/app composer:latest composer dump-autoload -a
 
 bash: ## Connexion a un conteneur par defaut php. Renseigner CONTAINER="nom du conteneur" pour ce connecter a un conteneur
-	docker-compose -f docker-compose.yml  exec -u 33:33 $(CONTAINER) bash
+	docker compose -f docker-compose.yml  exec -u 33:33 $(CONTAINER) bash
 
 setup: acl .env build start ## Tache d'initialisation de l'environnement
 

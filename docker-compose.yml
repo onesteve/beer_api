@@ -6,13 +6,16 @@ networks:
 services:
     mysql:
         container_name: ${COMPOSE_PROJECT_NAME}_mysql
-        image: mysql:latest
+        build:
+            dockerfile: .infra/docker/mysql/Dockerfile
+            context: .
         networks:
             - back
         command: --default-authentication-plugin=mysql_native_password
         environment:
             MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
             MYSQL_DATABASE: ${DATABASE_NAME}
+            MYSQL_DATABASE_TEST: ${DATABASE_NAME}_test
             MYSQL_USER: ${DATABASE_USER}
             MYSQL_PASSWORD: ${DATABASE_PASSWORD}
         security_opt: #fix mbind not permitted in container
@@ -28,14 +31,17 @@ services:
         image: nginx:latest
         networks:
             - back
+        links:
+            - php
         volumes:
-          - ./.infra/docker/nginx:/etc/nginx/conf.d:delegated
+            - ./.infra/docker/nginx:/etc/nginx/conf.d:delegated
+            - .:/app:delegated
         working_dir: /app
         ports:
-          - 8666:80
+            - 8666:80
         environment:
             NGINX_SERVERNAME: ${APP_DOMAIN}
-            NGINX_ROOTDIR: /app
+            NGINX_ROOTDIR: /app/public
         command: /bin/bash -c "envsubst '$$NGINX_SERVERNAME $$NGINX_ROOTDIR' < /etc/nginx/conf.d/beer.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
 
     php:
@@ -47,7 +53,8 @@ services:
             - back
         working_dir: /app
         volumes:
-          - .:/app
+            - .:/app
+        user: 1000:www-data
         environment:
             DATABASE_HOST: ${DATABASE_HOST}
             DATABASE_PORT: ${DATABASE_PORT}
