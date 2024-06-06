@@ -4,27 +4,40 @@ networks:
     back:
 
 services:
+#    mysql:
+#        container_name: ${COMPOSE_PROJECT_NAME}_mysql
+#        build:
+#            dockerfile: .infra/docker/mysql/Dockerfile
+#            context: .
+#        networks:
+#            - back
+#        command: --default-authentication-plugin=mysql_native_password
+#        environment:
+#            MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
+#            MYSQL_DATABASE: ${DATABASE_NAME}
+#            MYSQL_DATABASE_TEST: ${DATABASE_NAME}_test
+#            MYSQL_USER: ${DATABASE_USER}
+#            MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+#        security_opt: #fix mbind not permitted in container
+#            - seccomp:unconfined
+#        healthcheck:
+#            test: "mysql --user=root --password=${DATABASE_ROOT_PASSWORD} --execute \"SHOW DATABASES;\""
+#            interval: 3s
+#            timeout: 1s
+#            retries: 5
     mysql:
-        container_name: ${COMPOSE_PROJECT_NAME}_mysql
-        build:
-            dockerfile: .infra/docker/mysql/Dockerfile
-            context: .
+        image: mysql:5.7
         networks:
             - back
-        command: --default-authentication-plugin=mysql_native_password
+        container_name: ${COMPOSE_PROJECT_NAME}_mysql
+        restart: always
+        volumes:
+            - "db_volume:/var/lib/mysql"
+        ports:
+            - "3306:3306"
         environment:
-            MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${DATABASE_NAME}
-            MYSQL_DATABASE_TEST: ${DATABASE_NAME}_test
-            MYSQL_USER: ${DATABASE_USER}
-            MYSQL_PASSWORD: ${DATABASE_PASSWORD}
-        security_opt: #fix mbind not permitted in container
-            - seccomp:unconfined
-        healthcheck:
-            test: "mysql --user=root --password=${DATABASE_ROOT_PASSWORD} --execute \"SHOW DATABASES;\""
-            interval: 3s
-            timeout: 1s
-            retries: 5
+            MYSQL_PASSWORD: root
+            MYSQL_ROOT_PASSWORD: azerty
 
     nginx:
         container_name: ${COMPOSE_PROJECT_NAME}_nginx
@@ -63,3 +76,7 @@ services:
             DATABASE_PASSWORD: ${DATABASE_PASSWORD}
             DATABASE_ROOT_PASSWORD: ${DATABASE_PASSWORD}
             APP_DOMAIN: ${APP_DOMAIN}
+
+volumes:
+    db_volume:
+        driver: local
